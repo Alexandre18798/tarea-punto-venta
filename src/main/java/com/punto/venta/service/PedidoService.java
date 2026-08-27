@@ -1,83 +1,198 @@
 package com.punto.venta.service;
 
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.punto.venta.dto.PedidoDTO;
 import com.punto.venta.entity.Cliente;
 import com.punto.venta.entity.Pedido;
-import com.punto.venta.repository.ClienteRepository;
 import com.punto.venta.repository.PedidoRepository;
 
 @Service
 public class PedidoService {
 
     private final PedidoRepository pedidoRepository;
-    private final ClienteRepository clienteRepository;
 
-    public PedidoService(
-            PedidoRepository pedidoRepository,
-            ClienteRepository clienteRepository) {
-
+    public PedidoService(PedidoRepository pedidoRepository) {
         this.pedidoRepository = pedidoRepository;
-        this.clienteRepository = clienteRepository;
     }
 
-    public List<PedidoDTO> listarPedidos() {
+    public List<PedidoDTO> listarTodos() {
+
         return pedidoRepository.findAll()
                 .stream()
-                .map(this::convertirADTO)
+                .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
     public PedidoDTO crear(PedidoDTO dto) {
 
-        Cliente cliente = clienteRepository
-                .findById(dto.getIdCliente())
-                .orElseThrow(() ->
-                        new RuntimeException("El cliente no existe"));
+        Cliente cliente = new Cliente();
+        cliente.setIdCliente(dto.getIdCliente());
 
-        Pedido pedido = new Pedido();
+        boolean tienePedidoAbierto =
+                pedidoRepository
+                        .existsByIdClienteAndEstadoPedidoFalse(cliente);
 
-        pedido.setEstado(
-                dto.getEstado() != null ? dto.getEstado() : true);
+        if (tienePedidoAbierto) {
+            throw new RuntimeException(
+                    "El cliente ya tiene un pedido abierto"
+            );
+        }
 
-        pedido.setFechaPedido(
-                dto.getFechaPedido() != null
-                        ? dto.getFechaPedido()
-                        : new Date());
-
-        pedido.setEstadoPedido(
-                dto.getEstadoPedido() != null
-                        ? dto.getEstadoPedido()
-                        : true);
-
-        pedido.setTotal(dto.getTotal());
-        pedido.setIdCliente(cliente);
-
-        Pedido guardado = pedidoRepository.save(pedido);
-
-        return convertirADTO(guardado);
+        return convertToDTO(
+                pedidoRepository.save(
+                        convertToEntity(dto)
+                )
+        );
     }
 
-    private PedidoDTO convertirADTO(Pedido pedido) {
+    public PedidoDTO actualizar(
+            Integer idPedido,
+            PedidoDTO dto) {
+
+        Pedido pedidoExistente =
+                pedidoRepository.findById(idPedido)
+                        .orElseThrow(() ->
+                                new ResponseStatusException(
+                                        HttpStatus.NOT_FOUND,
+                                        "Pedido no encontrado"
+                                )
+                        );
+
+        if (dto.getEstado() != null) {
+            pedidoExistente.setEstado(
+                    dto.getEstado()
+            );
+        }
+
+        if (dto.getFechaPedido() != null) {
+            pedidoExistente.setFechaPedido(
+                    dto.getFechaPedido()
+            );
+        }
+
+        if (dto.getEstadoPedido() != null) {
+            pedidoExistente.setEstadoPedido(
+                    dto.getEstadoPedido()
+            );
+        }
+
+        if (dto.getTotal() != null) {
+            pedidoExistente.setTotal(
+                    dto.getTotal()
+            );
+        }
+
+        if (dto.getIdCliente() != null) {
+
+            Cliente cliente = new Cliente();
+            cliente.setIdCliente(
+                    dto.getIdCliente()
+            );
+
+            pedidoExistente.setIdCliente(cliente);
+        }
+
+        return convertToDTO(
+                pedidoRepository.save(
+                        pedidoExistente
+                )
+        );
+    }
+
+    public PedidoDTO anular(
+            Integer idPedido,
+            PedidoDTO dto) {
+
+        Pedido pedidoExistente =
+                pedidoRepository.findById(idPedido)
+                        .orElseThrow(() ->
+                                new ResponseStatusException(
+                                        HttpStatus.NOT_FOUND,
+                                        "Pedido no encontrado"
+                                )
+                        );
+
+        pedidoExistente.setEstado(false);
+
+        return convertToDTO(
+                pedidoRepository.save(
+                        pedidoExistente
+                )
+        );
+    }
+
+    public void eliminar(Integer idPedido) {
+
+        if (!pedidoRepository.existsById(idPedido)) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Pedido no encontrado"
+            );
+        }
+
+        pedidoRepository.deleteById(idPedido);
+    }
+
+    private PedidoDTO convertToDTO(Pedido pedido) {
 
         PedidoDTO dto = new PedidoDTO();
 
-        dto.setIdPedido(pedido.getIdPedido());
-        dto.setEstado(pedido.getEstado());
-        dto.setFechaPedido(pedido.getFechaPedido());
-        dto.setEstadoPedido(pedido.getEstadoPedido());
-        dto.setTotal(pedido.getTotal());
-
-        if (pedido.getIdCliente() != null) {
-            dto.setIdCliente(
-                    pedido.getIdCliente().getIdCliente());
-        }
+        dto.setIdPedido(
+                pedido.getIdPedido()
+        );
+        dto.setEstado(
+                pedido.getEstado()
+        );
+        dto.setIdCliente(
+                pedido.getIdCliente()
+                        .getIdCliente()
+        );
+        dto.setFechaPedido(
+                pedido.getFechaPedido()
+        );
+        dto.setEstadoPedido(
+                pedido.getEstadoPedido()
+        );
+        dto.setTotal(
+                pedido.getTotal()
+        );
 
         return dto;
+    }
+
+    private Pedido convertToEntity(PedidoDTO dto) {
+
+        Pedido pedido = new Pedido();
+
+        pedido.setIdPedido(
+                dto.getIdPedido()
+        );
+        pedido.setEstado(
+                dto.getEstado()
+        );
+
+        Cliente cliente = new Cliente();
+        cliente.setIdCliente(
+                dto.getIdCliente()
+        );
+
+        pedido.setIdCliente(cliente);
+        pedido.setFechaPedido(
+                dto.getFechaPedido()
+        );
+        pedido.setTotal(
+                dto.getTotal()
+        );
+        pedido.setEstadoPedido(
+                dto.getEstadoPedido()
+        );
+
+        return pedido;
     }
 }

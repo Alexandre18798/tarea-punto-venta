@@ -10,12 +10,15 @@ public class PedidoDetalleDTO {
     private BigDecimal subtotal;
     private Integer idPedido;
     private Integer idProducto;
+    private Boolean estado;
 
     public Integer getIdPedidoDetalle() {
         return idPedidoDetalle;
     }
 
-    public void setIdPedidoDetalle(Integer idPedidoDetalle) {
+    public void setIdPedidoDetalle(
+            Integer idPedidoDetalle) {
+
         this.idPedidoDetalle = idPedidoDetalle;
     }
 
@@ -31,13 +34,16 @@ public class PedidoDetalleDTO {
         return precioUnitario;
     }
 
-    public void setPrecioUnitario(BigDecimal precioUnitario) {
-         this.precioUnitario = precioUnitario;
+    public void setPrecioUnitario(
+            BigDecimal precioUnitario) {
+
+        this.precioUnitario = precioUnitario;
     }
 
-    public BigDecimal getSubtotal () {
+    public BigDecimal getSubtotal() {
         return subtotal;
     }
+
     public void setSubtotal(BigDecimal subtotal) {
         this.subtotal = subtotal;
     }
@@ -45,6 +51,7 @@ public class PedidoDetalleDTO {
     public Integer getIdPedido() {
         return idPedido;
     }
+
     public void setIdPedido(Integer idPedido) {
         this.idPedido = idPedido;
     }
@@ -52,8 +59,16 @@ public class PedidoDetalleDTO {
     public Integer getIdProducto() {
         return idProducto;
     }
+
     public void setIdProducto(Integer idProducto) {
         this.idProducto = idProducto;
     }
-}
 
+    public Boolean getEstado() {
+        return estado;
+    }
+
+    public void setEstado(Boolean estado) {
+        this.estado = estado;
+    }
+}

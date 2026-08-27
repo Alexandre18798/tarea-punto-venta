@@ -1,98 +1,255 @@
 package com.punto.venta.service;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.punto.venta.dto.PedidoDetalleDTO;
 import com.punto.venta.entity.Pedido;
 import com.punto.venta.entity.PedidoDetalle;
 import com.punto.venta.entity.Producto;
 import com.punto.venta.repository.PedidoDetalleRepository;
-import com.punto.venta.repository.PedidoRepository;
-import com.punto.venta.repository.ProductoRepository;
 
 @Service
 public class PedidoDetalleService {
-    
+
     private final PedidoDetalleRepository pedidoDetalleRepository;
-    private final PedidoRepository pedidoRepository;
-    private final ProductoRepository productoRepository;
 
     public PedidoDetalleService(
-       PedidoDetalleRepository pedidoDetalleRepository,
-       PedidoRepository pedidoRepository,
-       ProductoRepository productoRepository) {
+            PedidoDetalleRepository pedidoDetalleRepository) {
 
-        this.pedidoDetalleRepository = pedidoDetalleRepository;
-        this.pedidoRepository = pedidoRepository;
-        this.productoRepository = productoRepository;
-       }
+        this.pedidoDetalleRepository =
+                pedidoDetalleRepository;
+    }
 
-public List<PedidoDetalleDTO> listarDetalles() {
+    public List<PedidoDetalleDTO> listarTodos() {
+
         return pedidoDetalleRepository.findAll()
                 .stream()
-                .map(this::convertirADTO)
+                .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
-    public PedidoDetalleDTO crear(PedidoDetalleDTO dto) {
+    public PedidoDetalleDTO crear(
+            PedidoDetalleDTO dto) {
 
-        Pedido pedido = pedidoRepository
-                .findById(dto.getIdPedido())
-                .orElseThrow(() ->
-                        new RuntimeException("El pedido no existe"));
+        Pedido pedido = new Pedido();
+        pedido.setIdPedido(dto.getIdPedido());
 
-        Producto producto = productoRepository
-                .findById(dto.getIdProducto())
-                .orElseThrow(() ->
-                        new RuntimeException("El producto no existe"));
+        Producto producto = new Producto();
+        producto.setIdProducto(
+                dto.getIdProducto()
+        );
 
-        PedidoDetalle detalle = new PedidoDetalle();
+        boolean duplicado =
+                pedidoDetalleRepository
+                        .existsByIdPedidoAndIdProducto(
+                                pedido,
+                                producto
+                        );
 
-        detalle.setCantidad(dto.getCantidad());
-        detalle.setPrecioUnitario(dto.getPrecioUnitario());
-
-        BigDecimal subtotal = dto.getSubtotal();
-
-        if (subtotal == null) {
-            subtotal = dto.getPrecioUnitario()
-                    .multiply(BigDecimal.valueOf(dto.getCantidad()));
+        if (duplicado) {
+            throw new RuntimeException(
+                    "El detalle de pedido ya existe"
+            );
         }
 
-        detalle.setSubtotal(subtotal);
-        detalle.setIdPedido(pedido);
-        detalle.setIdProducto(producto);
-
-        PedidoDetalle guardado =
-                pedidoDetalleRepository.save(detalle);
-
-        return convertirADTO(guardado);
+        return convertToDTO(
+                pedidoDetalleRepository.save(
+                        convertToEntity(dto)
+                )
+        );
     }
 
-    private PedidoDetalleDTO convertirADTO(
+    public PedidoDetalleDTO actualizar(
+            Integer idPedidoDetalle,
+            PedidoDetalleDTO dto) {
+
+        PedidoDetalle detalleExistente =
+                pedidoDetalleRepository
+                        .findById(idPedidoDetalle)
+                        .orElseThrow(() ->
+                                new ResponseStatusException(
+                                        HttpStatus.NOT_FOUND,
+                                        "Detalle de pedido no encontrado"
+                                )
+                        );
+
+        if (dto.getIdPedido() != null) {
+
+            Pedido pedido = new Pedido();
+            pedido.setIdPedido(
+                    dto.getIdPedido()
+            );
+
+            detalleExistente.setIdPedido(pedido);
+        }
+
+        if (dto.getIdProducto() != null) {
+
+            Producto producto = new Producto();
+            producto.setIdProducto(
+                    dto.getIdProducto()
+            );
+
+            detalleExistente.setIdProducto(
+                    producto
+            );
+        }
+
+        if (dto.getCantidad() != null) {
+            detalleExistente.setCantidad(
+                    dto.getCantidad()
+            );
+        }
+
+        if (dto.getPrecioUnitario() != null) {
+            detalleExistente.setPrecioUnitario(
+                    dto.getPrecioUnitario()
+            );
+        }
+
+        if (dto.getSubtotal() != null) {
+            detalleExistente.setSubtotal(
+                    dto.getSubtotal()
+            );
+        }
+
+        if (dto.getEstado() != null) {
+            detalleExistente.setEstado(
+                    dto.getEstado()
+            );
+        }
+
+        return convertToDTO(
+                pedidoDetalleRepository.save(
+                        detalleExistente
+                )
+        );
+    }
+
+    public PedidoDetalleDTO anular(
+            Integer idPedidoDetalle) {
+
+        PedidoDetalle detalleExistente =
+                pedidoDetalleRepository
+                        .findById(idPedidoDetalle)
+                        .orElseThrow(() ->
+                                new ResponseStatusException(
+                                        HttpStatus.NOT_FOUND,
+                                        "Detalle de pedido no encontrado"
+                                )
+                        );
+
+        detalleExistente.setEstado(false);
+
+        return convertToDTO(
+                pedidoDetalleRepository.save(
+                        detalleExistente
+                )
+        );
+    }
+
+    public void eliminar(Integer idPedidoDetalle) {
+
+        if (!pedidoDetalleRepository
+                .existsById(idPedidoDetalle)) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Detalle de pedido no encontrado"
+            );
+        }
+
+        pedidoDetalleRepository.deleteById(
+                idPedidoDetalle
+        );
+    }
+
+    private PedidoDetalleDTO convertToDTO(
             PedidoDetalle detalle) {
 
-        PedidoDetalleDTO dto = new PedidoDetalleDTO();
+        PedidoDetalleDTO dto =
+                new PedidoDetalleDTO();
 
         dto.setIdPedidoDetalle(
-                detalle.getIdPedidoDetalle());
-        dto.setCantidad(detalle.getCantidad());
-        dto.setPrecioUnitario(detalle.getPrecioUnitario());
-        dto.setSubtotal(detalle.getSubtotal());
+                detalle.getIdPedidoDetalle()
+        );
 
-        if (detalle.getIdPedido() != null) {
-            dto.setIdPedido(
-                    detalle.getIdPedido().getIdPedido());
-        }
+        dto.setIdPedido(
+                detalle.getIdPedido()
+                        .getIdPedido()
+        );
 
-        if (detalle.getIdProducto() != null) {
-            dto.setIdProducto(
-                    detalle.getIdProducto().getIdProducto());
-        }
+        dto.setIdProducto(
+                detalle.getIdProducto()
+                        .getIdProducto()
+        );
+
+        dto.setCantidad(
+                detalle.getCantidad()
+        );
+
+        dto.setPrecioUnitario(
+                detalle.getPrecioUnitario()
+        );
+
+        dto.setSubtotal(
+                detalle.getSubtotal()
+        );
+
+        dto.setEstado(
+                detalle.getEstado()
+        );
 
         return dto;
+    }
+
+    private PedidoDetalle convertToEntity(
+            PedidoDetalleDTO dto) {
+
+        PedidoDetalle detalle =
+                new PedidoDetalle();
+
+        detalle.setIdPedidoDetalle(
+                dto.getIdPedidoDetalle()
+        );
+
+        Pedido pedido = new Pedido();
+        pedido.setIdPedido(
+                dto.getIdPedido()
+        );
+
+        detalle.setIdPedido(pedido);
+
+        Producto producto = new Producto();
+        producto.setIdProducto(
+                dto.getIdProducto()
+        );
+
+        detalle.setIdProducto(producto);
+
+        detalle.setCantidad(
+                dto.getCantidad()
+        );
+
+        detalle.setPrecioUnitario(
+                dto.getPrecioUnitario()
+        );
+
+        detalle.setSubtotal(
+                dto.getSubtotal()
+        );
+
+        detalle.setEstado(
+                dto.getEstado() != null
+                        ? dto.getEstado()
+                        : true
+        );
+
+        return detalle;
     }
 }

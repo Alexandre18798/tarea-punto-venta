@@ -3,32 +3,29 @@ package com.punto.venta.controller;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.punto.venta.dto.ClienteDTO;
 import com.punto.venta.dto.MessageResponse;
-import com.punto.venta.repository.ClienteRepository;
 import com.punto.venta.service.ClienteService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("/clientes")
 @CrossOrigin(origins = "*")
 public class ClienteController {
-    private final ClienteRepository clienteRepository;
+
     private final ClienteService clienteService;
 
-    public ClienteController(ClienteService clienteService,
-            ClienteRepository clienteRepository) {
-
-        this.clienteRepository = clienteRepository;
+    public ClienteController(ClienteService clienteService) {
         this.clienteService = clienteService;
     }
 
@@ -38,14 +35,57 @@ public class ClienteController {
     }
 
     @PostMapping
-    public ResponseEntity<MessageResponse> crearCliente(@RequestBody ClienteDTO clienteDTO) {
-        try {
-            clienteService.crear(clienteDTO);
-            return ResponseEntity.ok(new MessageResponse("Cliente Creado con éxito"));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new MessageResponse("Error el cliente ya existe"));
-        }
+    public ResponseEntity<MessageResponse> crearCliente(
+            @RequestBody ClienteDTO clienteDTO) {
+
+        clienteService.crear(clienteDTO);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new MessageResponse(
+                        "Cliente creado con éxito"
+                ));
+    }
+    @PutMapping("/{idCliente}")
+    public ResponseEntity<MessageResponse> actualizarCliente(
+            @PathVariable Integer idCliente,
+            @RequestBody ClienteDTO clienteDTO) {
+
+        clienteService.actualizar(
+                idCliente,
+                clienteDTO
+        );
+
+        return ResponseEntity.ok(
+                new MessageResponse(
+                        "Cliente actualizado con éxito"
+                )
+        );
     }
 
+    @PutMapping("/anular/{idCliente}")
+    public ResponseEntity<MessageResponse> anularCliente(
+            @PathVariable Integer idCliente) {
+
+        clienteService.anular(idCliente);
+
+        return ResponseEntity.ok(
+                new MessageResponse(
+                        "Cliente anulado con éxito"
+                )
+        );
+    }
+
+    @DeleteMapping("/{idCliente}")
+    public ResponseEntity<MessageResponse> eliminarCliente(
+            @PathVariable Integer idCliente) {
+
+        clienteService.eliminar(idCliente);
+
+        return ResponseEntity.ok(
+                new MessageResponse(
+                        "Cliente eliminado con éxito"
+                )
+        );
+    }
 }
