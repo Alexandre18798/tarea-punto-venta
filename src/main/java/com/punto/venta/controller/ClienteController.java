@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.punto.venta.dto.ClienteDTO;
@@ -34,6 +35,23 @@ public class ClienteController {
         return clienteService.listarTodos();
     }
 
+    @GetMapping("/mostrarActivos")
+    public List<ClienteDTO> mostrarActivos() {
+        return clienteService.mostrarActivos();
+    }
+
+    @GetMapping("/mostrarActivosFiltro")
+    public List<ClienteDTO> mostrarActivosFiltro(
+            @RequestParam String nombre) {
+        return clienteService.mostrarActivosFiltro(nombre);
+    }
+
+    @GetMapping("/mostrarActivosFiltroTop")
+    public List<ClienteDTO> mostrarActivosFiltroTop(
+            @RequestParam String nombre) {
+        return clienteService.mostrarActivosFiltroTop(nombre);
+    }
+
     @PostMapping
     public ResponseEntity<MessageResponse> crearCliente(
             @RequestBody ClienteDTO clienteDTO) {
@@ -46,6 +64,7 @@ public class ClienteController {
                         "Cliente creado con éxito"
                 ));
     }
+
     @PutMapping("/{idCliente}")
     public ResponseEntity<MessageResponse> actualizarCliente(
             @PathVariable Integer idCliente,

@@ -35,6 +35,34 @@ public class ProductoService {
                 .collect(Collectors.toList());
     }
 
+    public List<ProductoDTO> mostrarActivos() {
+
+        return productoRepository.findByEstadoTrue()
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<ProductoDTO> mostrarActivosFiltro(
+            String nombre) {
+
+        return productoRepository
+                .findByEstadoTrueAndNombreContainingIgnoreCase(nombre)
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<ProductoDTO> mostrarActivosFiltroTop(
+            String nombre) {
+
+        return productoRepository
+                .findTop2ByEstadoTrueAndNombreContainingIgnoreCase(nombre)
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     public ProductoDTO crear(ProductoDTO dto) {
 
         Categoria categoria =
@@ -91,19 +119,13 @@ public class ProductoService {
         if (dto.getIdCategoria() != null) {
 
             Categoria categoria =
-                    buscarCategoria(
-                            dto.getIdCategoria()
-                    );
+                    buscarCategoria(dto.getIdCategoria());
 
-            productoExistente.setIdCategoria(
-                    categoria
-            );
+            productoExistente.setIdCategoria(categoria);
         }
 
         Producto actualizado =
-                productoRepository.save(
-                        productoExistente
-                );
+                productoRepository.save(productoExistente);
 
         return convertToDTO(actualizado);
     }
@@ -116,9 +138,7 @@ public class ProductoService {
         productoExistente.setEstado(false);
 
         Producto anulado =
-                productoRepository.save(
-                        productoExistente
-                );
+                productoRepository.save(productoExistente);
 
         return convertToDTO(anulado);
     }
@@ -128,9 +148,7 @@ public class ProductoService {
         Producto productoExistente =
                 buscarProducto(idProducto);
 
-        productoRepository.delete(
-                productoExistente
-        );
+        productoRepository.delete(productoExistente);
     }
 
     private Producto buscarProducto(
@@ -165,29 +183,16 @@ public class ProductoService {
         ProductoDTO dto =
                 new ProductoDTO();
 
-        dto.setIdProducto(
-                producto.getIdProducto()
-        );
-        dto.setEstado(
-                producto.getEstado()
-        );
-        dto.setNombre(
-                producto.getNombre()
-        );
-        dto.setDescripcion(
-                producto.getDescripcion()
-        );
-        dto.setPrecio(
-                producto.getPrecio()
-        );
-        dto.setStock(
-                producto.getStock()
-        );
+        dto.setIdProducto(producto.getIdProducto());
+        dto.setEstado(producto.getEstado());
+        dto.setNombre(producto.getNombre());
+        dto.setDescripcion(producto.getDescripcion());
+        dto.setPrecio(producto.getPrecio());
+        dto.setStock(producto.getStock());
 
         if (producto.getIdCategoria() != null) {
             dto.setIdCategoria(
-                    producto.getIdCategoria()
-                            .getIdCategoria()
+                    producto.getIdCategoria().getIdCategoria()
             );
         }
 
@@ -201,9 +206,7 @@ public class ProductoService {
                 new Producto();
 
         producto.setNombre(dto.getNombre());
-        producto.setDescripcion(
-                dto.getDescripcion()
-        );
+        producto.setDescripcion(dto.getDescripcion());
         producto.setPrecio(dto.getPrecio());
         producto.setStock(dto.getStock());
         producto.setEstado(

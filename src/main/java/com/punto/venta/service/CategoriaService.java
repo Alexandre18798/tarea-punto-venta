@@ -30,7 +30,34 @@ public class CategoriaService {
                 .collect(Collectors.toList());
     }
 
-    // POST: crear una categoría
+    public List<CategoriaDTO> mostrarActivos() {
+
+        return categoriaRepository.findByEstadoTrue()
+                .stream()
+                .map(this::convertirADTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<CategoriaDTO> mostrarActivosFiltro(
+            String nombre) {
+
+        return categoriaRepository
+                .findByEstadoTrueAndNombreContainingIgnoreCase(nombre)
+                .stream()
+                .map(this::convertirADTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<CategoriaDTO> mostrarActivosFiltroTop(
+            String nombre) {
+
+        return categoriaRepository
+                .findTop2ByEstadoTrueAndNombreContainingIgnoreCase(nombre)
+                .stream()
+                .map(this::convertirADTO)
+                .collect(Collectors.toList());
+    }
+
     public CategoriaDTO crear(CategoriaDTO dto) {
 
         boolean duplicado =
@@ -105,11 +132,11 @@ public class CategoriaService {
 
     public void eliminar(Integer idCategoria) {
 
-        Categoria categoriaExistente =
+        Categoria categoriaExististente =
                 buscarCategoria(idCategoria);
 
         categoriaRepository.delete(
-                categoriaExistente
+                categoriaExististente
         );
     }
 
@@ -125,6 +152,7 @@ public class CategoriaService {
                         )
                 );
     }
+
     private CategoriaDTO convertirADTO(
             Categoria categoria) {
 
@@ -146,6 +174,7 @@ public class CategoriaService {
 
         return dto;
     }
+
     private Categoria convertirAEntidad(
             CategoriaDTO dto) {
 

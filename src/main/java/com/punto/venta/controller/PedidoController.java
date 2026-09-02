@@ -12,11 +12,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.punto.venta.dto.MessageResponse;
 import com.punto.venta.dto.PedidoDTO;
-import com.punto.venta.repository.PedidoRepository;
 import com.punto.venta.service.PedidoService;
 
 @RestController
@@ -24,21 +24,38 @@ import com.punto.venta.service.PedidoService;
 @CrossOrigin(origins = "*")
 public class PedidoController {
 
-    private final PedidoRepository pedidoRepository;
     private final PedidoService pedidoService;
 
     public PedidoController(
-            PedidoService pedidoService,
-            PedidoRepository pedidoRepository) {
+            PedidoService pedidoService) {
 
         this.pedidoService = pedidoService;
-        this.pedidoRepository = pedidoRepository;
     }
 
     @GetMapping
     public List<PedidoDTO> listarTodos() {
 
         return pedidoService.listarTodos();
+    }
+
+    @GetMapping("/mostrarActivos")
+    public List<PedidoDTO> mostrarActivos() {
+
+        return pedidoService.mostrarActivos();
+    }
+
+    @GetMapping("/mostrarActivosFiltro")
+    public List<PedidoDTO> mostrarActivosFiltro(
+            @RequestParam String nombre) {
+
+        return pedidoService.mostrarActivosFiltro(nombre);
+    }
+
+    @GetMapping("/mostrarActivosFiltroTop")
+    public List<PedidoDTO> mostrarActivosFiltroTop(
+            @RequestParam String nombre) {
+
+        return pedidoService.mostrarActivosFiltroTop(nombre);
     }
 
     @PostMapping
@@ -123,7 +140,7 @@ public class PedidoController {
             @PathVariable Integer idPedido) {
 
         try {
-            pedidoRepository.deleteById(idPedido);
+            pedidoService.eliminar(idPedido);
 
             return ResponseEntity.ok(
                     new MessageResponse(

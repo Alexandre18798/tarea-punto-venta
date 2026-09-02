@@ -29,6 +29,34 @@ public class PedidoService {
                 .collect(Collectors.toList());
     }
 
+    public List<PedidoDTO> mostrarActivos() {
+
+        return pedidoRepository.findByEstadoTrue()
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<PedidoDTO> mostrarActivosFiltro(
+            String nombre) {
+
+        return pedidoRepository
+                .findByEstadoTrueAndIdClienteNombreContainingIgnoreCase(nombre)
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<PedidoDTO> mostrarActivosFiltroTop(
+            String nombre) {
+
+        return pedidoRepository
+                .findTop2ByEstadoTrueAndIdClienteNombreContainingIgnoreCase(nombre)
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     public PedidoDTO crear(PedidoDTO dto) {
 
         Cliente cliente = new Cliente();

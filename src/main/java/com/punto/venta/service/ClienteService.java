@@ -19,12 +19,37 @@ public class ClienteService {
     public ClienteService(ClienteRepository clienteRepository) {
         this.clienteRepository = clienteRepository;
     }
+
     public List<ClienteDTO> listarTodos() {
         return clienteRepository.findAll()
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
+
+    public List<ClienteDTO> mostrarActivos() {
+        return clienteRepository.findByEstadoTrue()
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<ClienteDTO> mostrarActivosFiltro(String nombre) {
+        return clienteRepository
+                .findByEstadoTrueAndNombreContainingIgnoreCase(nombre)
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<ClienteDTO> mostrarActivosFiltroTop(String nombre) {
+        return clienteRepository
+                .findTop2ByEstadoTrueAndNombreContainingIgnoreCase(nombre)
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     public ClienteDTO crear(ClienteDTO dto) {
 
         boolean duplicado =
@@ -46,6 +71,7 @@ public class ClienteService {
 
         return convertToDTO(guardado);
     }
+
     public ClienteDTO actualizar(
             Integer idCliente,
             ClienteDTO dto) {
@@ -84,6 +110,7 @@ public class ClienteService {
 
         return convertToDTO(actualizado);
     }
+
     public ClienteDTO anular(Integer idCliente) {
 
         Cliente clienteExistente =
@@ -96,6 +123,7 @@ public class ClienteService {
 
         return convertToDTO(anulado);
     }
+
     public void eliminar(Integer idCliente) {
 
         Cliente clienteExistente =
@@ -103,6 +131,7 @@ public class ClienteService {
 
         clienteRepository.delete(clienteExistente);
     }
+
     private Cliente buscarCliente(Integer idCliente) {
 
         return clienteRepository.findById(idCliente)
@@ -113,6 +142,7 @@ public class ClienteService {
                         )
                 );
     }
+
     private ClienteDTO convertToDTO(Cliente cliente) {
 
         ClienteDTO dto = new ClienteDTO();
@@ -127,6 +157,7 @@ public class ClienteService {
 
         return dto;
     }
+
     private Cliente convertToEntity(ClienteDTO dto) {
 
         Cliente cliente = new Cliente();

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.punto.venta.dto.CategoriaDTO;
@@ -36,6 +37,29 @@ public class CategoriaController {
 
         return categoriaService
                 .listarCategorias();
+    }
+
+    @GetMapping("/mostrarActivos")
+    public List<CategoriaDTO> mostrarActivos() {
+
+        return categoriaService
+                .mostrarActivos();
+    }
+
+    @GetMapping("/mostrarActivosFiltro")
+    public List<CategoriaDTO> mostrarActivosFiltro(
+            @RequestParam String nombre) {
+
+        return categoriaService
+                .mostrarActivosFiltro(nombre);
+    }
+
+    @GetMapping("/mostrarActivosFiltroTop")
+    public List<CategoriaDTO> mostrarActivosFiltroTop(
+            @RequestParam String nombre) {
+
+        return categoriaService
+                .mostrarActivosFiltroTop(nombre);
     }
 
     @PostMapping
@@ -80,6 +104,7 @@ public class CategoriaController {
                 )
         );
     }
+
     @DeleteMapping("/{idCategoria}")
     public ResponseEntity<MessageResponse> eliminarCategoria(
             @PathVariable Integer idCategoria) {
